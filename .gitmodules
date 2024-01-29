@@ -10,3 +10,6 @@
 [submodule "foundry-smart-contract-lottery-f23/lib/foundry-devops"]
 	path = foundry-smart-contract-lottery-f23/lib/foundry-devops
 	url = https://github.com/Cyfrin/foundry-devops
+[submodule "foundry-smart-contract-lottery-f23/lib/prettier-plugin-solidity"]
+	path = foundry-smart-contract-lottery-f23/lib/prettier-plugin-solidity
+	url = https://github.com/prettier-solidity/prettier-plugin-solidity
