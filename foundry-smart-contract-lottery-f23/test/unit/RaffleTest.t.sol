@@ -22,6 +22,7 @@ contract RaffleTest is Test {
     uint64 subscriptionId;
     uint32 callbackGasLimit;
     address linkAddress;
+    uint256 deployerKey;
 
     modifier upkeepConditions() {
         vm.prank(PLAYER);
@@ -32,12 +33,20 @@ contract RaffleTest is Test {
         _;
     }
 
+    modifier skipFork() {
+        if (block.chainid != 31337) {
+            return;
+        }
+        _;
+    }
+
     function setUp() external {
         DeployRaffle raffleDeployer = new DeployRaffle();
         (raffleContract, raffleHelperConfig) = raffleDeployer.run();
 
-        (entranceFee, interval, vrfCoordinator, gasLane, subscriptionId, callbackGasLimit, linkAddress) =
+        (entranceFee, interval, vrfCoordinator, gasLane, subscriptionId, callbackGasLimit, linkAddress,) =
             raffleHelperConfig.activeNetworkConfig();
+        (,,,,,,,deployerKey) = raffleHelperConfig.activeNetworkConfig();
 
         vm.deal(PLAYER, STARTING_USER_BALANCE);
     }
@@ -153,12 +162,12 @@ contract RaffleTest is Test {
     //  fulfillRandomWords  //
     /////////////////////////
 
-    function test_fulfillRandomWords_canOnlyBeCalledAfterPerformedUpkeep(uint256 randomSubscriptionId) public {
+    function test_fulfillRandomWords_canOnlyBeCalledAfterPerformedUpkeep(uint256 randomSubscriptionId) public skipFork {
         vm.expectRevert("nonexistent request");
         VRFCoordinatorV2Mock(vrfCoordinator).fulfillRandomWords(randomSubscriptionId, address(raffleContract));
     }
 
-    function test_fulfillRandomWords_picksAWinnerResetsAndSendsMoney() public upkeepConditions {
+    function test_fulfillRandomWords_picksAWinnerResetsAndSendsMoney() public upkeepConditions skipFork {
         uint256 additionalEntrants = 5;
         uint256 startingIndex = 1;
 

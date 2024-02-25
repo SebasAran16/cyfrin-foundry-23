@@ -11,14 +11,14 @@ contract CreateSubscription is Script {
     function createSubscriptionUsingConfig() public returns (uint64 subscriptionId) {
         RaffleHelperConfig raffleHelper = new RaffleHelperConfig();
 
-        (,, address vrfCoordinator,,,,) = raffleHelper.activeNetworkConfig();
-        subscriptionId = createSubscription(vrfCoordinator);
+        (,, address vrfCoordinator,,,,, uint256 deployerKey) = raffleHelper.activeNetworkConfig();
+        subscriptionId = createSubscription(vrfCoordinator, deployerKey);
     }
 
-    function createSubscription(address vrfCoordinator) public returns (uint64 subscriptionId) {
+    function createSubscription(address vrfCoordinator, uint256 deployerKey) public returns (uint64 subscriptionId) {
         console.log("Creating Chainlink VRF Subscription on Chain ID: ", block.chainid);
 
-        vm.startBroadcast();
+        vm.startBroadcast(deployerKey);
         subscriptionId = VRFCoordinatorV2Mock(vrfCoordinator).createSubscription();
         vm.stopBroadcast();
         console.log("Your subscription ID is :", subscriptionId);
@@ -35,22 +35,22 @@ contract FundSubscription is Script {
     function fundSubscriptionUsingConfig() public {
         RaffleHelperConfig raffleHelper = new RaffleHelperConfig();
 
-        (,, address vrfCoordinator,, uint64 subscriptionId,, address linkAddress) = raffleHelper.activeNetworkConfig();
+        (,, address vrfCoordinator,, uint64 subscriptionId,, address linkAddress, uint256 deployerKey) = raffleHelper.activeNetworkConfig();
 
-        fundSubscription(vrfCoordinator, subscriptionId, linkAddress);
+        fundSubscription(vrfCoordinator, subscriptionId, linkAddress, deployerKey);
     }
 
-    function fundSubscription(address vrfCoordinator, uint64 subscriptionId, address linkAddress) public {
+    function fundSubscription(address vrfCoordinator, uint64 subscriptionId, address linkAddress, uint256 deployerKey) public {
         console.log("Funding subscription: ", subscriptionId);
         console.log("Using VRF Coordinator: ", vrfCoordinator);
         console.log("On Chain Id: ", block.chainid);
 
         if (block.chainid == 31337) {
-            vm.startBroadcast();
+            vm.startBroadcast(deployerKey);
             VRFCoordinatorV2Mock(vrfCoordinator).fundSubscription(subscriptionId, FUND_AMOUNT);
             vm.stopBroadcast();
         } else {
-            vm.startBroadcast();
+            vm.startBroadcast(deployerKey);
             LinkToken(linkAddress).transferAndCall(vrfCoordinator, FUND_AMOUNT, abi.encode(subscriptionId));
             vm.stopBroadcast();
         }
@@ -65,19 +65,19 @@ contract AddConsumer is Script {
     function addConsumerUsingConfig(address raffleAddress) public {
         RaffleHelperConfig raffleHelper = new RaffleHelperConfig();
 
-        (,, address vrfCoordinator,, uint64 subscriptionId,,) = raffleHelper.activeNetworkConfig();
+        (,, address vrfCoordinator,, uint64 subscriptionId,,, uint256 deployerKey) = raffleHelper.activeNetworkConfig();
 
-        addConsumer(raffleAddress, vrfCoordinator, subscriptionId);
+        addConsumer(raffleAddress, vrfCoordinator, subscriptionId, deployerKey);
     }
 
-    function addConsumer(address raffleAddress, address vrfCoordinator, uint64 subscriptionId)
+    function addConsumer(address raffleAddress, address vrfCoordinator, uint64 subscriptionId, uint256 deployerKey)
         public
     {
         console.log("Adding consumer Contract: ", raffleAddress);
         console.log("Using vrfCoordinator: ", vrfCoordinator);
         console.log("On Chain ID: ", block.chainid);
 
-        vm.startBroadcast();
+        vm.startBroadcast(deployerKey);
         VRFCoordinatorV2Mock(vrfCoordinator).addConsumer(subscriptionId, raffleAddress);
         vm.stopBroadcast();
     }

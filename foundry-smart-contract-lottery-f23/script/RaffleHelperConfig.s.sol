@@ -14,6 +14,7 @@ contract RaffleHelperConfig is Script {
         uint64 subscriptionId;
         uint32 callbackGasLimit;
         address linkAddress;
+        uint256 deployerKey;
     }
 
     uint256 constant DEFAULT_ANVIL_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
@@ -34,9 +35,10 @@ contract RaffleHelperConfig is Script {
             interval: 30,
             vrfCoordinator: 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625,
             gasLane: 0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef,
-            subscriptionId: 8784,
+            subscriptionId: 9650,
             callbackGasLimit: 500000, // 500,000 gas
-            linkAddress: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+            linkAddress: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            deployerKey: vm.envUint("METAMASK_TEST1_PRIVATE_KEY")
         });
     }
 
@@ -44,10 +46,10 @@ contract RaffleHelperConfig is Script {
         if (activeNetworkConfig.vrfCoordinator != address(0)) return activeNetworkConfig;
 
         uint96 baseFee = 0.25 ether;
-        uint96 gasPriveLink = 1e9;
+        uint96 gasPriceLink = 1e9;
 
         vm.startBroadcast();
-        VRFCoordinatorV2Mock vrfCoordinatorMock = new VRFCoordinatorV2Mock(baseFee, gasPriveLink);
+        VRFCoordinatorV2Mock vrfCoordinatorMock = new VRFCoordinatorV2Mock(baseFee, gasPriceLink);
         vm.stopBroadcast();
 
         LinkToken linkToken = new LinkToken();
@@ -59,7 +61,8 @@ contract RaffleHelperConfig is Script {
             gasLane: 0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef,
             subscriptionId: 0,
             callbackGasLimit: 500000, // 500,000 gas
-            linkAddress: address(linkToken)
+            linkAddress: address(linkToken),
+            deployerKey: DEFAULT_ANVIL_KEY
         });
     }
 }
