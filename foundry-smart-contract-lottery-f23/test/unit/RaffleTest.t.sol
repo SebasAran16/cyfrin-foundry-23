@@ -22,7 +22,6 @@ contract RaffleTest is Test {
     uint64 subscriptionId;
     uint32 callbackGasLimit;
     address linkAddress;
-    uint256 deployerKey;
 
     modifier upkeepConditions() {
         vm.prank(PLAYER);
@@ -37,7 +36,7 @@ contract RaffleTest is Test {
         DeployRaffle raffleDeployer = new DeployRaffle();
         (raffleContract, raffleHelperConfig) = raffleDeployer.run();
 
-        (entranceFee, interval, vrfCoordinator, gasLane, subscriptionId, callbackGasLimit, linkAddress, deployerKey) =
+        (entranceFee, interval, vrfCoordinator, gasLane, subscriptionId, callbackGasLimit, linkAddress) =
             raffleHelperConfig.activeNetworkConfig();
 
         vm.deal(PLAYER, STARTING_USER_BALANCE);

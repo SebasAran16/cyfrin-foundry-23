@@ -17,8 +17,7 @@ contract DeployRaffle is Script {
             bytes32 gasLane,
             uint64 subscriptionId,
             uint32 callbackGasLimit,
-            address linkAddress,
-            uint256 deployerKey
+            address linkAddress
         ) = raffleHelperConfig.activeNetworkConfig();
 
         if (subscriptionId == 0) {
@@ -34,6 +33,6 @@ contract DeployRaffle is Script {
         vm.stopBroadcast();
 
         AddConsumer addConsumer = new AddConsumer();
-        addConsumer.addConsumer(address(raffleAddress), vrfCoordinator, subscriptionId, deployerKey);
+        addConsumer.addConsumer(address(raffleAddress), vrfCoordinator, subscriptionId);
     }
 }

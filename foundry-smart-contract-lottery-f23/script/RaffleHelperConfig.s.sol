@@ -14,7 +14,6 @@ contract RaffleHelperConfig is Script {
         uint64 subscriptionId;
         uint32 callbackGasLimit;
         address linkAddress;
-        uint256 deployerKey;
     }
 
     uint256 constant DEFAULT_ANVIL_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
@@ -37,8 +36,7 @@ contract RaffleHelperConfig is Script {
             gasLane: 0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef,
             subscriptionId: 8784,
             callbackGasLimit: 500000, // 500,000 gas
-            linkAddress: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
-            deployerKey: vm.envUint("METAMASK_TEST1_PRIVATE_KEY")
+            linkAddress: 0x779877A7B0D9E8603169DdbD7836e478b4624789
         });
     }
 
@@ -61,8 +59,7 @@ contract RaffleHelperConfig is Script {
             gasLane: 0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef,
             subscriptionId: 0,
             callbackGasLimit: 500000, // 500,000 gas
-            linkAddress: address(linkToken),
-            deployerKey: DEFAULT_ANVIL_KEY
+            linkAddress: address(linkToken)
         });
     }
 }
