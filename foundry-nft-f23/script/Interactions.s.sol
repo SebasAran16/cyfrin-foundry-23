@@ -33,7 +33,7 @@ contract MintMoodNft is Script {
     function mintNftOnContract(address contractAddress) public {
         vm.startBroadcast();
         MoodNft(contractAddress).mintNft();
-        vm.startBroadcast();
+        vm.stopBroadcast();
     }
 }
 
