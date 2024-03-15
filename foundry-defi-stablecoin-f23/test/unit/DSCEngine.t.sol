@@ -7,6 +7,7 @@ import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
 import {DSCEngine} from "../../src/DSCEngine.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
+import {MockV3Aggregator} from "../mocks/MockV3Aggregator.sol";
 
 contract DSCEngineTest is Test {
   DeployDSC public deployer;
@@ -20,6 +21,8 @@ contract DSCEngineTest is Test {
   address public USER = makeAddr("user");
   uint256 public constant AMOUNT_COLLATERAL = 10 ether;
   uint256 public constant STARTING_ERC20_BALANCE = 10 ether;
+  uint256 public constant COLLATERAL_MAX_HEALTHY_USD_MINT = 10000 ether;
+  int256 public constant ETH_USD_DEFAULT_ANSWER = 2000e8;
 
   function setUp() external {
     deployer = new DeployDSC();
@@ -91,4 +94,71 @@ contract DSCEngineTest is Test {
     assertEq(totalDscMinted, expectedTotalDscMinted);
     assertEq(AMOUNT_COLLATERAL, expectedDepositAmount);
   }
+
+  function test_mintDsc_revertsWhenHasNoCollateral() public {
+    uint256 expectedHealthFactor = 0;
+
+    vm.prank(USER);
+    vm.expectRevert(abi.encodeWithSelector(DSCEngine.DSCEngine__BreaksHealthFactor.selector, expectedHealthFactor));
+    engine.mintDsc(AMOUNT_COLLATERAL);
+  }
+
+  function test_mintDsc_whenHavingCollateralCanMintEventEmitsStateExpected() public depositedCollateral {
+    vm.prank(USER);
+    vm.expectEmit(true, true, false, true);
+    emit DSCEngine.DSCMinted(USER, COLLATERAL_MAX_HEALTHY_USD_MINT);
+    engine.mintDsc(COLLATERAL_MAX_HEALTHY_USD_MINT);
+  }
+
+  function test_redeemCollateral_revertsWhenValueIsZero() public {
+    vm.expectRevert(DSCEngine.DSCEngine__NeedsMoreThanZero.selector);
+    engine.redeemCollateral(weth, 0);
+  }
+
+  function test_redeemCollateral_canRedeemCollateralOnHealthFactorOkEventEmits() public depositedCollateral {
+    uint256 userBalanceBefore = ERC20Mock(weth).balanceOf(USER);
+
+    vm.prank(USER);
+    vm.expectEmit(true, true, true, true);
+    emit DSCEngine.CollateralRedeemed(USER, USER, weth, AMOUNT_COLLATERAL);
+    engine.redeemCollateral(weth, AMOUNT_COLLATERAL);
+    uint256 userBalanceAfter = ERC20Mock(weth).balanceOf(USER);
+
+    assertEq(userBalanceAfter, userBalanceBefore + AMOUNT_COLLATERAL);
+  }
+
+  function test_redeemCollateral_revertsWhenHealthFactorLowerThanMin() public {
+    test_mintDsc_whenHavingCollateralCanMintEventEmitsStateExpected();
+
+    uint256 expectedHealthFactor = 5e17;
+    vm.prank(USER);
+    vm.expectRevert(abi.encodeWithSelector(DSCEngine.DSCEngine__BreaksHealthFactor.selector, expectedHealthFactor));
+    engine.redeemCollateral(weth, AMOUNT_COLLATERAL / 2);
+  }
+
+  function test_liquidate_revertsWhenDebtToCoverIsZero() public {
+    vm.expectRevert(DSCEngine.DSCEngine__NeedsMoreThanZero.selector);
+    engine.liquidate(weth, address(0), 0);
+  }
+
+  function test_liquidate_revertsWhenHealthFactorIsOk() public {
+    test_mintDsc_whenHavingCollateralCanMintEventEmitsStateExpected();
+
+    vm.expectRevert(DSCEngine.DSCEngine__HealthFactorOk.selector);
+    engine.liquidate(weth, USER, AMOUNT_COLLATERAL);
+  }
+
+//  function test_liquidate_canLiquidateWhenHealthFactorLower() public {
+//    test_mintDsc_whenHavingCollateralCanMintEventEmitsStateExpected();
+//
+//    MockV3Aggregator(ethUsdPriceFeed).updateAnswer(ETH_USD_DEFAULT_ANSWER / 2);
+//    uint256 startingBalanceAdjusted = STARTING_ERC20_BALANCE * 2;
+//    ERC20Mock(weth).mint(address(this), startingBalanceAdjusted);
+//    ERC20Mock(weth).approve(address(engine), startingBalanceAdjusted);
+//    engine.depositCollateralAndMintDsc(weth, startingBalanceAdjusted, COLLATERAL_MAX_HEALTHY_USD_MINT);
+//
+//    vm.expectEmit(true, true, false, true);
+//    emit DSCEngine.Liquidated(address(this), USER);
+//    engine.liquidate(weth, USER, COLLATERAL_MAX_HEALTHY_USD_MINT);
+//  }
 }
