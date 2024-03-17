@@ -9,3 +9,9 @@
 
 
 1. What are our invariants / properties of the system?
+
+---
+
+1. Some proper oracle use
+2. Write more tests
+3. Smart Contract audit preparation
