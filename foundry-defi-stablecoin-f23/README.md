@@ -6,3 +6,6 @@
 3. Collateral: Exogenous (Crypto)
    4. ETH
    5. BTC
+
+
+1. What are our invariants / properties of the system?
