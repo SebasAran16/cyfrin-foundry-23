@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {DeployDSC} from "../../script/DeployDSC.s.sol";
 import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
 import {DSCEngine} from "../../src/DSCEngine.sol";
@@ -19,10 +19,14 @@ contract DSCEngineTest is Test {
   address public weth;
 
   address public USER = makeAddr("user");
+
   uint256 public constant AMOUNT_COLLATERAL = 10 ether;
   uint256 public constant STARTING_ERC20_BALANCE = 10 ether;
   uint256 public constant COLLATERAL_MAX_HEALTHY_USD_MINT = 10000 ether;
   int256 public constant ETH_USD_DEFAULT_ANSWER = 2000e8;
+
+  address public LIQUIDATOR = makeAddr("liquidator");
+  uint256 public collateralToCover = 20 ether;
 
   function setUp() external {
     deployer = new DeployDSC();
@@ -148,17 +152,19 @@ contract DSCEngineTest is Test {
     engine.liquidate(weth, USER, AMOUNT_COLLATERAL);
   }
 
-//  function test_liquidate_canLiquidateWhenHealthFactorLower() public {
-//    test_mintDsc_whenHavingCollateralCanMintEventEmitsStateExpected();
-//
-//    MockV3Aggregator(ethUsdPriceFeed).updateAnswer(ETH_USD_DEFAULT_ANSWER / 2);
-//    uint256 startingBalanceAdjusted = STARTING_ERC20_BALANCE * 2;
-//    ERC20Mock(weth).mint(address(this), startingBalanceAdjusted);
-//    ERC20Mock(weth).approve(address(engine), startingBalanceAdjusted);
-//    engine.depositCollateralAndMintDsc(weth, startingBalanceAdjusted, COLLATERAL_MAX_HEALTHY_USD_MINT);
-//
-//    vm.expectEmit(true, true, false, true);
-//    emit DSCEngine.Liquidated(address(this), USER);
-//    engine.liquidate(weth, USER, COLLATERAL_MAX_HEALTHY_USD_MINT);
-//  }
+  function test_liquidate_canLiquidateWhenHealthFactorLower() public {
+    test_mintDsc_whenHavingCollateralCanMintEventEmitsStateExpected();
+
+    MockV3Aggregator(ethUsdPriceFeed).updateAnswer(ETH_USD_DEFAULT_ANSWER / 2);
+
+    uint256 collateralBalanceAdjusted = AMOUNT_COLLATERAL * 2;
+    ERC20Mock(weth).mint(address(this), collateralBalanceAdjusted);
+    ERC20Mock(weth).approve(address(engine), collateralBalanceAdjusted);
+    engine.depositCollateralAndMintDsc(weth, collateralBalanceAdjusted, COLLATERAL_MAX_HEALTHY_USD_MINT);
+
+    dsc.approve(address(engine), collateralToCover);
+    vm.expectEmit(true, true, false, true);
+    emit DSCEngine.Liquidated(address(this), USER);
+    engine.liquidate(weth, USER, collateralToCover);
+  }
 }
