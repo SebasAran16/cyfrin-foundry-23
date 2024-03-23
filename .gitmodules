@@ -46,3 +46,6 @@
 [submodule "foundry-upgrades-f23/lib/foundry-devops"]
 	path = foundry-upgrades-f23/lib/foundry-devops
 	url = https://github.com/Cyfrin/foundry-devops
+[submodule "foundry-dao-f23/lib/forge-std"]
+	path = foundry-dao-f23/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
